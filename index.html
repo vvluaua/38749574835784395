@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>For Chloe &#9829;</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fraunces:opsz,wght@9..144,400;9..144,600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --pixel:"Press Start 2P",monospace;
+    --serif:"Fraunces",Georgia,serif;
+    --heart:#ff4d6d;
+    --sky-top:#cfe8ff;
+    --sky-mid:#7db6e6;
+    --sky-low:#4f93cf;
+    --night:#0a2342;
+    --paper:#fff7ea;
+    --ink:#26323f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:var(--serif);
+    background:var(--night);
+    color:#fff;
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+    image-rendering:pixelated;
+  }
+  img,svg{image-rendering:pixelated;}
+
+  /* ===== scene system ===== */
+  .scene{
+    position:fixed;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:24px;gap:28px;
+    opacity:0;visibility:hidden;pointer-events:none;
+    transition:opacity .7s ease;
+  }
+  .scene.active{opacity:1;visibility:visible;pointer-events:auto;}
+
+  /* ===== arcade buttons / bubbles ===== */
+  .arcade-btn,.bubble{
+    font-family:var(--pixel);
+    cursor:pointer;border:none;color:var(--night);
+    background:#fff;
+    padding:18px 26px;font-size:clamp(.65rem,2vw,.9rem);line-height:1.4;
+    box-shadow:0 0 0 4px var(--night),0 8px 0 4px rgba(10,35,66,.55);
+    transition:transform .08s ease,box-shadow .08s ease;
+    letter-spacing:1px;
+  }
+  .arcade-btn:hover,.bubble:hover{transform:translateY(-2px);}
+  .arcade-btn:active,.bubble:active{transform:translateY(4px);
+    box-shadow:0 0 0 4px var(--night),0 2px 0 4px rgba(10,35,66,.55);}
+  .arcade-btn:focus-visible,.bubble:focus-visible{outline:3px dashed var(--heart);outline-offset:6px;}
+  .bubble{position:relative;background:#fff;}
+  .bubble::after{content:"";position:absolute;left:50%;bottom:-14px;width:14px;height:14px;
+    background:#fff;transform:translateX(-50%);
+    box-shadow:0 0 0 4px var(--night);clip-path:polygon(0 0,100% 0,50% 100%);}
+
+  .pixel-title{
+    font-family:var(--pixel);
+    font-size:clamp(1rem,4.4vw,2.1rem);line-height:1.7;
+    color:#fff;text-shadow:4px 4px 0 var(--heart),8px 8px 0 rgba(10,35,66,.45);
+    max-width:18ch;
+  }
+  .sub{font-family:var(--pixel);font-size:clamp(.55rem,1.8vw,.8rem);line-height:1.7;color:#fff;
+    text-shadow:2px 2px 0 rgba(10,35,66,.6);max-width:26ch;}
+
+  /* ===== SCENE 0 : letter ===== */
+  #s0{background:radial-gradient(120% 120% at 50% 40%,#16386b 0%,#0a2342 70%);}
+  .envelope{width:min(360px,80vw);aspect-ratio:7/5;position:relative;cursor:pointer;border:none;background:none;}
+  .env-base{position:absolute;inset:0;background:#e9f3ff;box-shadow:0 0 0 5px var(--night),0 18px 0 5px rgba(0,0,0,.3);}
+  .env-pocket{position:absolute;inset:0;background:#cfe6ff;
+    clip-path:polygon(0 30%,50% 66%,100% 30%,100% 100%,0 100%);box-shadow:inset 0 0 0 4px rgba(10,35,66,.25);}
+  .env-flap{position:absolute;top:0;left:0;width:100%;height:62%;background:#bcdcff;
+    clip-path:polygon(0 0,100% 0,50% 100%);box-shadow:inset 0 -4px 0 rgba(10,35,66,.18);
+    transform-origin:top;transition:transform .6s ease;z-index:5;}
+  .seal{position:absolute;top:42%;left:50%;width:46px;height:46px;transform:translate(-50%,-50%);
+    background:var(--heart);z-index:6;display:grid;place-items:center;color:#fff;font-size:18px;
+    box-shadow:0 0 0 4px #fff,0 0 0 8px var(--night);transition:opacity .3s;clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%);}
+  .letter-paper{position:absolute;left:8%;right:8%;top:6%;bottom:18%;background:var(--paper);
+    box-shadow:0 0 0 4px var(--night);z-index:3;display:grid;place-items:center;color:var(--ink);
+    transform:scaleY(.04);transform-origin:center;transition:transform .9s ease;}
+  .letter-paper::before,.letter-paper::after{content:"";position:absolute;left:0;right:0;height:2px;background:rgba(10,35,66,.12);}
+  .letter-paper::before{top:33%;}.letter-paper::after{top:66%;}
+  .letter-paper .lp-heart{font-size:34px;color:var(--heart);opacity:0;transition:opacity .4s ease .5s;}
+  .envelope.opening .env-flap{transform:rotateX(170deg);}
+  .envelope.opening .seal{opacity:0;}
+  .envelope.opening .letter-paper{transform:scaleY(1);}
+  .envelope.opening .letter-paper .lp-heart{opacity:1;}
+
+  /* ===== clouds ===== */
+  .cloud{position:absolute;will-change:transform;opacity:.95;}
+  @keyframes drift{from{transform:translateX(-30vw);}to{transform:translateX(130vw);}}
+
+  /* ===== SCENE 1 : anniversary ===== */
+  #s1{background:linear-gradient(180deg,var(--sky-top),var(--sky-mid) 70%,var(--sky-low));}
+  .sun{position:absolute;top:8%;right:10%;width:70px;height:70px;background:#ffe07a;
+    box-shadow:0 0 0 8px rgba(255,224,122,.35),0 0 0 16px rgba(255,224,122,.18);
+    clip-path:polygon(50% 0,61% 35%,100% 35%,69% 57%,79% 100%,50% 75%,21% 100%,31% 57%,0 35%,39% 35%);}
+
+  /* ===== SCENE 2 : quiz ===== */
+  #s2{background:linear-gradient(180deg,#bfe0ff,#8ec2ec 55%,#dCEbF7 100%);justify-content:flex-start;padding-top:9vh;}
+  .mountains{position:absolute;left:0;bottom:0;width:100%;height:64vh;z-index:0;pointer-events:none;}
+  .quiz-card{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:22px;}
+  .answers{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;}
+  .miss{animation:shake .4s;}
+  @keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-10px);}40%{transform:translateX(10px);}60%{transform:translateX(-7px);}80%{transform:translateX(7px);}}
+  .wrong-note{font-family:var(--pixel);font-size:.6rem;color:#b3203a;background:#fff;
+    padding:10px 14px;box-shadow:0 0 0 4px var(--night);opacity:0;transition:opacity .25s;}
+  .wrong-note.show{opacity:1;}
+
+  /* ===== SCENE 3 : success ===== */
+  #s3{background:linear-gradient(180deg,#0a2342,#16386b);}
+  .confetti{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden;}
+  .spark{position:absolute;width:12px;height:12px;will-change:transform,opacity;}
+
+  .credit{position:fixed;bottom:10px;left:0;right:0;text-align:center;font-family:var(--pixel);
+    font-size:.5rem;color:rgba(255,255,255,.45);z-index:9;}
+
+  @media (prefers-reduced-motion:reduce){
+    .scene{transition:none;}
+    .cloud{animation:none!important;}
+    .env-flap,.letter-paper{transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= SCENE 0 : THE LETTER ================= -->
+<section class="scene active" id="s0">
+  <button class="envelope" id="envelope" aria-label="Open the letter">
+    <span class="env-base"></span>
+    <span class="env-pocket"></span>
+    <span class="letter-paper"><span class="lp-heart">&#9829;</span></span>
+    <span class="env-flap"></span>
+    <span class="seal" aria-hidden="true">&#9829;</span>
+  </button>
+  <button class="bubble" id="openBtn">OPEN</button>
+</section>
+
+<!-- ================= SCENE 1 : ANNIVERSARY ================= -->
+<section class="scene" id="s1">
+  <div class="sun" aria-hidden="true"></div>
+  <h1 class="pixel-title">HAPPY 3 MONTHS ANNIVERSARY!</h1>
+  <button class="bubble" id="continueBtn">CONTINUE</button>
+</section>
+
+<!-- ================= SCENE 2 : QUIZ ================= -->
+<section class="scene" id="s2">
+  <!-- pixel mountains + climbing hiker + flag -->
+  <svg class="mountains" viewBox="0 0 320 200" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <!-- back range -->
+    <polygon points="0,200 0,165 45,150 95,128 150,158 205,118 260,150 320,138 320,200" fill="#5d92c4"/>
+    <!-- front range -->
+    <polygon points="0,200 0,158 60,150 110,124 180,92 250,140 320,150 320,200" fill="#356aa6"/>
+    <!-- snow caps -->
+    <polygon points="180,92 165,112 174,108 180,116 187,107 196,112" fill="#ffffff"/>
+    <polygon points="110,124 100,140 108,136 110,143 115,136 122,140" fill="#eaf4ff"/>
+    <!-- trail -->
+    <path id="trail" d="M70,190 L100,172 L118,150 L140,134 L160,116 L180,98" fill="none" stroke="#dCE9F7" stroke-width="3" stroke-dasharray="5 6" stroke-linecap="round"/>
+    <!-- flag at summit -->
+    <g id="flag">
+      <rect x="179" y="74" width="2.4" height="20" fill="#26323f"/>
+      <rect id="flagCloth" x="181" y="74" width="14" height="9" fill="#ff4d6d"/>
+    </g>
+    <!-- hiker (feet sit at 0,0; climbs the trail) -->
+    <g id="hiker" opacity="0">
+      <rect x="-3" y="-17" width="6" height="5" fill="#ffe2c4"/>      <!-- head -->
+      <rect x="-7" y="-12" width="4" height="7" fill="#1f4e79"/>      <!-- pack -->
+      <rect x="-4" y="-12" width="8" height="8" fill="#ff4d6d"/>      <!-- jacket -->
+      <rect x="-4" y="-4" width="3" height="5" fill="#26323f"/>       <!-- leg -->
+      <rect x="1" y="-4" width="3" height="5" fill="#26323f"/>        <!-- leg -->
+      <rect x="4" y="-13" width="1.6" height="13" fill="#8a5a2b"/>    <!-- stick -->
+      <animateMotion id="climbAnim" dur="3s" begin="indefinite" fill="freeze" rotate="0">
+        <mpath href="#trail" xlink:href="#trail"/>
+      </animateMotion>
+    </g>
+  </svg>
+
+  <div class="quiz-card">
+    <p class="sub">ANSWER CORRECTLY TO PROCEED!</p>
+    <h2 class="pixel-title" style="max-width:22ch;">WHAT DATE DID WE GET TOGETHER?</h2>
+    <p class="sub" style="color:#0a2342;text-shadow:none;">HINT: TODAY, BUT THREE MONTHS AGO</p>
+    <div class="answers">
+      <button class="arcade-btn" data-correct="false">24TH MARCH</button>
+      <button class="arcade-btn" data-correct="true">27TH MARCH</button>
+    </div>
+    <p class="wrong-note" id="wrongNote">NOPE! TRY AGAIN &#9829;</p>
+  </div>
+</section>
+
+<!-- ================= SCENE 3 : SUCCESS ================= -->
+<section class="scene" id="s3">
+  <h2 class="pixel-title">YOU GOT IT!<br>OF COURSE YOU DID.</h2>
+  <p class="sub">ONE MORE STEP...</p>
+  <button class="bubble" id="proceedBtn">CLICK HERE TO PROCEED</button>
+</section>
+
+<div class="confetti" id="confetti" aria-hidden="true"></div>
+<p class="credit">made with &#9829; by beau</p>
+
+<script>
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const scenes = { 0:document.getElementById("s0"),1:document.getElementById("s1"),2:document.getElementById("s2"),3:document.getElementById("s3") };
+function show(n){ Object.values(scenes).forEach(s=>s.classList.remove("active")); scenes[n].classList.add("active"); }
+
+/* ---- clouds ---- */
+function pixelCloud(){
+  const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+  svg.setAttribute("viewBox","0 0 60 30"); svg.setAttribute("width","100%"); svg.setAttribute("height","100%");
+  svg.innerHTML = `<g fill="#ffffff" stroke="#dCE9F7" stroke-width="1">
+    <rect x="10" y="14" width="40" height="10"/><rect x="18" y="8" width="24" height="10"/>
+    <rect x="6" y="18" width="48" height="6"/></g>`;
+  return svg;
+}
+function addClouds(parent, count, topMin, topMax){
+  for(let i=0;i<count;i++){
+    const c=document.createElement("div");
+    c.className="cloud";
+    const w=70+Math.random()*90;
+    c.style.width=w+"px"; c.style.height=(w*0.5)+"px";
+    c.style.top=(topMin+Math.random()*(topMax-topMin))+"%";
+    c.style.animation=`drift ${22+Math.random()*20}s linear ${-(Math.random()*30)}s infinite`;
+    c.appendChild(pixelCloud());
+    parent.appendChild(c);
+  }
+}
+addClouds(scenes[1], 5, 12, 55);   // anniversary: mid sky
+addClouds(scenes[2], 5, 4, 26);    // quiz: clouds higher up
+
+/* ---- scene 0: open the letter ---- */
+const envelope=document.getElementById("envelope");
+function openLetter(){
+  if(envelope.classList.contains("opening")) return;
+  envelope.classList.add("opening");
+  document.getElementById("openBtn").style.display="none";
+  setTimeout(()=>show(1), reduceMotion?100:1500);
+}
+document.getElementById("openBtn").addEventListener("click",openLetter);
+envelope.addEventListener("click",openLetter);
+
+/* ---- scene 1 -> 2 ---- */
+document.getElementById("continueBtn").addEventListener("click",()=>show(2));
+
+/* ---- scene 2: quiz ---- */
+const wrongNote=document.getElementById("wrongNote");
+document.querySelectorAll("#s2 .answers .arcade-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    if(btn.dataset.correct==="true"){ winSequence(); }
+    else{
+      wrongNote.classList.add("show");
+      btn.classList.add("miss");
+      setTimeout(()=>btn.classList.remove("miss"),420);
+    }
+  });
+});
+
+function winSequence(){
+  wrongNote.classList.remove("show");
+  document.querySelectorAll("#s2 .answers .arcade-btn").forEach(b=>b.disabled=true);
+  const hiker=document.getElementById("hiker");
+  hiker.setAttribute("opacity","1");
+  const anim=document.getElementById("climbAnim");
+  if(!reduceMotion && anim && anim.beginElement){
+    try{ anim.beginElement(); }catch(e){}
+    setTimeout(()=>{ flagWave(); burst(); show(3); confettiStart(); }, 3000);
+  } else {
+    // reduced motion: place hiker at summit instantly
+    hiker.removeAttribute("transform");
+    hiker.setAttribute("transform","translate(180,98)");
+    show(3);
+  }
+}
+function flagWave(){
+  const cloth=document.getElementById("flagCloth");
+  let t=0; setInterval(()=>{ t+=0.2; cloth.setAttribute("width",(11+Math.sin(t)*3).toFixed(1)); },120);
+}
+
+/* ---- celebration particles ---- */
+function burst(){ /* quick heart pop at summit handled by confetti */ }
+function confettiStart(){
+  if(reduceMotion) return;
+  const box=document.getElementById("confetti");
+  const colors=["#ff4d6d","#ffe07a","#ffffff","#7db6e6"];
+  for(let i=0;i<60;i++){
+    const p=document.createElement("div");
+    p.className="spark";
+    p.style.left=Math.random()*100+"vw";
+    p.style.top="-20px";
+    p.style.background=colors[Math.floor(Math.random()*colors.length)];
+    if(Math.random()<0.4) p.style.clipPath="polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%)";
+    box.appendChild(p);
+    const fall=2200+Math.random()*2600, drift=(Math.random()*200-100);
+    p.animate(
+      [{transform:"translate(0,0) rotate(0deg)",opacity:1},
+       {transform:`translate(${drift}px,110vh) rotate(${Math.random()*720}deg)`,opacity:.9}],
+      {duration:fall,delay:Math.random()*800,easing:"linear",fill:"forwards"}
+    );
+    setTimeout(()=>p.remove(), fall+1000);
+  }
+}
+
+/* ---- proceed to the main site ---- */
+document.getElementById("proceedBtn").addEventListener("click",()=>{
+  window.location.href="site.html";
+});
+</script>
+</body>
+</html>
